@@ -1,4 +1,4 @@
-# doomgeneric
+# doomgeneric port for BoredOS
 The purpose of doomgeneric is to make porting Doom easier.
 Of course Doom is already portable but with doomgeneric it is possible with just a few functions.
 
