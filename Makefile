@@ -57,9 +57,17 @@ ifdef BOOTSTRAP_SDK
 		fi \
 	fi
 endif
+	@if [ ! -f "$(SDK_PATH)/include/novaproto.h" ]; then \
+		if [ ! -d "../nova" ]; then \
+			echo "Nova not found locally. Cloning from GitHub..."; \
+			git clone https://github.com/boredos/nova.git ../nova; \
+		fi; \
+		echo "Exporting Nova SDK components..."; \
+		$(MAKE) -C ../nova BOREDOS_SDK=$(SDK_PATH) export-sdk; \
+	fi
 
 # Compile C source files
-obj/%.o: src/%.c
+obj/%.o: src/%.c | bootstrap-sdk
 	@mkdir -p obj
 	$(CC) $(CFLAGS) -c $< -o $@
 
