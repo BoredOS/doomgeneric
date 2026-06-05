@@ -82,5 +82,22 @@ install: all
 		cp freedoom1.wad $(DESTDIR)/bin/doom1.wad; \
 	fi
 
+.PHONY: bup
+bup: all
+	rm -rf build/package
+	mkdir -p build/package/bin build/package/assets
+	cp $(BINARY) build/package/bin/
+	@if [ -f freedoom1.wad ]; then cp freedoom1.wad build/package/assets/freedoom1.wad; fi
+	@echo 'name = "doomgeneric"' > build/package/MANIFEST.toml
+	@echo 'version = "1.0.0"' >> build/package/MANIFEST.toml
+	@echo '[install]' >> build/package/MANIFEST.toml
+	@echo 'bin = "/bin"' >> build/package/MANIFEST.toml
+	@echo 'assets = "/Library/DOOM"' >> build/package/MANIFEST.toml
+	mkdir -p build
+	tar -cf build/doomgeneric.tar -C build/package MANIFEST.toml bin assets
+	lz4 -f build/doomgeneric.tar build/doomgeneric.bup
+	rm -f build/doomgeneric.tar
+	rm -rf build/package
+
 clean:
 	rm -rf obj $(BINARY) build
