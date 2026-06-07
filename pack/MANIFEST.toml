@@ -1,0 +1,9 @@
+name = "doomgeneric"
+version = "1.0.0"
+description = "DOOMgeneric port for Nova"
+author = "BoredOS Community"
+license = "GPLv3"
+
+[install]
+bin = "/bin"
+assets = "/Library/images/icons"

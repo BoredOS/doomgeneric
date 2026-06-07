@@ -81,20 +81,38 @@ install: all
 	@if [ -f freedoom1.wad ]; then \
 		cp freedoom1.wad $(DESTDIR)/bin/doom1.wad; \
 	fi
+	@if [ -d pack/apps ]; then \
+		mkdir -p $(DESTDIR)/usr/share/applications; \
+		cp -a pack/apps/*.desktop $(DESTDIR)/usr/share/applications/; \
+	fi
+
 
 .PHONY: bup
 bup: all
 	rm -rf build/package
-	mkdir -p build/package/bin build/package/assets
+	mkdir -p build/package/bin build/package/assets build/package/usr/share/applications
 	cp $(BINARY) build/package/bin/
 	@if [ -f freedoom1.wad ]; then cp freedoom1.wad build/package/assets/freedoom1.wad; fi
-	@echo 'name = "doomgeneric"' > build/package/MANIFEST.toml
-	@echo 'version = "1.0.0"' >> build/package/MANIFEST.toml
-	@echo '[install]' >> build/package/MANIFEST.toml
-	@echo 'bin = "/bin"' >> build/package/MANIFEST.toml
-	@echo 'assets = "/Library/DOOM"' >> build/package/MANIFEST.toml
+	# Include any packaged assets (icons) from pack/assets
+	if [ -d pack/assets ]; then \
+		cp -a pack/assets/* build/package/assets/; \
+	fi
+	# Include any application desktop entries from pack/apps (if present)
+	if [ -d pack/apps ]; then \
+		cp -a pack/apps/*.desktop build/package/usr/share/applications/; \
+	fi
+	# Use pack/MANIFEST.toml if provided, otherwise generate a minimal manifest
+	if [ -f pack/MANIFEST.toml ]; then \
+		cp pack/MANIFEST.toml build/package/MANIFEST.toml; \
+	else \
+		@echo 'name = "doomgeneric"' > build/package/MANIFEST.toml; \
+		@echo 'version = "1.0.0"' >> build/package/MANIFEST.toml; \
+		@echo '[install]' >> build/package/MANIFEST.toml; \
+		@echo 'bin = "/bin"' >> build/package/MANIFEST.toml; \
+		@echo 'assets = "/Library/images/icons"' >> build/package/MANIFEST.toml; \
+	fi
 	mkdir -p build
-	tar -cf build/doomgeneric.tar -C build/package MANIFEST.toml bin assets
+	tar -cf build/doomgeneric.tar -C build/package MANIFEST.toml bin assets usr
 	lz4 -f build/doomgeneric.tar build/doomgeneric.bup
 	rm -f build/doomgeneric.tar
 	rm -rf build/package
