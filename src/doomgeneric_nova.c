@@ -16,7 +16,6 @@
 #include <syscall.h>
 
 #include <novaproto.h>
-#include <theme.h>
 
 enum {
     NOVA_KEY_A = 1,
@@ -127,9 +126,6 @@ static void poll_nova_events() {
 }
 void DG_Init() {
     atexit(cleanup_nova);
-
-    ThemeConfig theme;
-    theme_load("/etc/nova/nova.conf", &theme);
 
     nova_fd = nova_connect(NULL);
     if (nova_fd < 0) {

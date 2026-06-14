@@ -73,13 +73,17 @@ obj/%.o: src/%.c | bootstrap-sdk
 
 # Link the userland executable
 $(BINARY): $(OBJECTS)
-	$(LD) $(LDFLAGS) $(SDK_PATH)/lib/crt0.o $(OBJECTS) -ltheme -lnovaproto -lui -lc -o $@
+	$(LD) $(LDFLAGS) $(SDK_PATH)/lib/crt0.o $(OBJECTS) -lnovaproto -lc -o $@
 
 install: all
 	mkdir -p $(DESTDIR)/bin
 	cp $(BINARY) $(DESTDIR)/bin/
 	@if [ -f freedoom1.wad ]; then \
 		cp freedoom1.wad $(DESTDIR)/bin/doom1.wad; \
+	fi
+	@if [ -d pack/assets ]; then \
+		mkdir -p $(DESTDIR)/Library/images/icons; \
+		cp -a pack/assets/*.png $(DESTDIR)/Library/images/icons/ 2>/dev/null || true; \
 	fi
 	@if [ -d pack/apps ]; then \
 		mkdir -p $(DESTDIR)/usr/share/applications; \

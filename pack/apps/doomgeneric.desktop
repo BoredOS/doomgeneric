@@ -3,6 +3,6 @@ Type=Application
 Name=doomgeneric
 Comment=Port of Doom for Nova
 Exec=/bin/doom.elf
-Icon=/Library/images/icons/doomgeneric.png
+Icon=/Library/images/icons/doom.png
 Terminal=false
 Categories=Game;Entertainment;
