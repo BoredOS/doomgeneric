@@ -44,7 +44,7 @@ enum {
 
 #define WINDOW_WIDTH  640
 #define WINDOW_HEIGHT 400
-#define NORMAL_LAYER  1
+#define NORMAL_LAYER  2
 
 #define KEYQUEUE_SIZE 32
 
@@ -153,7 +153,6 @@ void DG_Init() {
         exit(1);
     }
     nova_set_title(nova_fd, surface_id, "DOOMgeneric");
-    nova_set_state(nova_fd, surface_id, 1);
 }
 void DG_DrawFrame() {
     if (!shm_pixels || !DG_ScreenBuffer) return;
@@ -198,8 +197,25 @@ void DG_SetWindowTitle(const char *title) {
 int main(int argc, char **argv) {
     doomgeneric_Create(argc, argv);
 
+    uint32_t last_tick = DG_GetTicksMs();
+
     while (1) {
         doomgeneric_Tick();
+        
+        while (1) {
+            uint32_t now = DG_GetTicksMs();
+            if ((now - last_tick) >= 28) {
+                last_tick = now;
+                break;
+            }
+            
+            uint32_t remain = 28 - (now - last_tick);
+            if (remain >= 10) {
+                sleep(remain);
+            } else {
+                sys_yield();
+            }
+        }
     }
 
     return 0;
