@@ -78,16 +78,15 @@ $(BINARY): $(OBJECTS)
 install: all
 	mkdir -p $(DESTDIR)/bin
 	cp $(BINARY) $(DESTDIR)/bin/
+	mkdir -p $(DESTDIR)/Library/AppData/org.boredos.doomgeneric
 	@if [ -f freedoom1.wad ]; then \
-		cp freedoom1.wad $(DESTDIR)/bin/doom1.wad; \
+		cp freedoom1.wad $(DESTDIR)/Library/AppData/org.boredos.doomgeneric/doom1.wad; \
 	fi
-	@if [ -d pack/assets ]; then \
-		mkdir -p $(DESTDIR)/Library/images/icons; \
-		cp -a pack/assets/*.png $(DESTDIR)/Library/images/icons/ 2>/dev/null || true; \
+	@if [ -f pack/assets/doom.png ]; then \
+		cp pack/assets/doom.png $(DESTDIR)/Library/AppData/org.boredos.doomgeneric/doomgeneric.png; \
 	fi
 	@if [ -d pack/apps ]; then \
-		mkdir -p $(DESTDIR)/usr/share/applications; \
-		cp -a pack/apps/*.desktop $(DESTDIR)/usr/share/applications/; \
+		cp -a pack/apps/*.desktop $(DESTDIR)/Library/AppData/org.boredos.doomgeneric/; \
 	fi
 
 
@@ -98,8 +97,8 @@ bup: all
 	cp $(BINARY) build/package/bin/
 	@if [ -f freedoom1.wad ]; then cp freedoom1.wad build/package/assets/freedoom1.wad; fi
 	# Include any packaged assets (icons) from pack/assets
-	if [ -d pack/assets ]; then \
-		cp -a pack/assets/* build/package/assets/; \
+	if [ -f pack/assets/doom.png ]; then \
+		cp pack/assets/doom.png build/package/assets/doomgeneric.png; \
 	fi
 	# Include any application desktop entries from pack/apps (if present)
 	if [ -d pack/apps ]; then \
@@ -113,7 +112,7 @@ bup: all
 		@echo 'version = "1.0.0"' >> build/package/MANIFEST.toml; \
 		@echo '[install]' >> build/package/MANIFEST.toml; \
 		@echo 'bin = "/bin"' >> build/package/MANIFEST.toml; \
-		@echo 'assets = "/Library/images/icons"' >> build/package/MANIFEST.toml; \
+		@echo 'assets = "/Library/AppData/org.boredos.doomgeneric"' >> build/package/MANIFEST.toml; \
 	fi
 	mkdir -p build
 	tar -cf build/doomgeneric.tar -C build/package MANIFEST.toml bin assets usr

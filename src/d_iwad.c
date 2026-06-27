@@ -615,7 +615,7 @@ static void BuildIWADDirList(void)
 #else
     AddIWADDir(".");
     AddIWADDir("/bin");
-    AddIWADDir("/Library/DOOM");
+    AddIWADDir("/Library/AppData/org.boredos.doomgeneric");
 
     // Don't run this function again.
 
