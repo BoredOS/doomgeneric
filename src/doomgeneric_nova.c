@@ -166,13 +166,13 @@ void DG_SleepMs(uint32_t ms) {
 
 
     if (ms < 10) {
-        sys_yield();
+        sched_yield();
     } else {
         sleep(ms);
     }
 }
 uint32_t DG_GetTicksMs() {
-    return (uint32_t)sys_system(16, 0, 0, 0, 0) * 50 / 3;
+    return (uint32_t)get_ticks() * 50 / 3;
 }
 int DG_GetKey(int* pressed, unsigned char* doomKey) {
     if (s_KeyQueueReadIndex == s_KeyQueueWriteIndex) {
@@ -213,7 +213,7 @@ int main(int argc, char **argv) {
             if (remain >= 10) {
                 sleep(remain);
             } else {
-                sys_yield();
+                sched_yield();
             }
         }
     }
