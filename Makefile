@@ -24,11 +24,9 @@ endif
 
 DESTDIR ?= $(abspath build/dist)
 
-GCC_INTERNAL_INCLUDE := $(shell $(CC) -print-file-name=include)
-
 CFLAGS  = -Wall -Wextra -std=gnu11 -ffreestanding -O2 -fno-stack-protector \
           -fno-stack-check -fno-lto -fno-pie -m64 -march=x86-64 -mno-red-zone \
-          -nostdinc -isystem $(GCC_INTERNAL_INCLUDE) -isystem $(SDK_PATH)/include -Isrc -DNORMALUNIX -D_DEFAULT_SOURCE
+          -isystem $(SDK_PATH)/include -Isrc -DNORMALUNIX -D_DEFAULT_SOURCE
 
 LDFLAGS = -m elf_x86_64 -nostdlib -static -no-pie -Ttext=0x40000000 \
           --no-dynamic-linker -z text -z max-page-size=0x1000 -e _start \
