@@ -14,6 +14,7 @@
 #include <time.h>
 #include <ctype.h>
 #include <syscall.h>
+#include <poll.h>
 
 #include <novaproto.h>
 

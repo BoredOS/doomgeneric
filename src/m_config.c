@@ -24,32 +24,6 @@
 #include <ctype.h>
 #include <errno.h>
 
-double atof(const char *s) {
-    double a = 0.0;
-    int sign = 1;
-    while (isspace((unsigned char)*s)) s++;
-    if (*s == '-') {
-        sign = -1;
-        s++;
-    } else if (*s == '+') {
-        s++;
-    }
-    while (*s >= '0' && *s <= '9') {
-        a = a * 10.0 + (*s - '0');
-        s++;
-    }
-    if (*s == '.') {
-        s++;
-        double dec = 0.1;
-        while (*s >= '0' && *s <= '9') {
-            a += (*s - '0') * dec;
-            dec *= 0.1;
-            s++;
-        }
-    }
-    return a * sign;
-}
-
 #include "config.h"
 
 #include "doomtype.h"

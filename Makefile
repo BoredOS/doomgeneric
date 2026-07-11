@@ -42,28 +42,11 @@ all: bootstrap-sdk $(BINARY)
 # Autonomic SDK Bootstrapper
 .PHONY: bootstrap-sdk
 bootstrap-sdk:
-ifdef BOOTSTRAP_SDK
-	@if [ ! -f "$(BOOTSTRAP_SDK)/lib/libc.a" ]; then \
-		if [ -d "../libc" ]; then \
-			echo "[STANDALONE] Peer libc found at ../libc. Building standard SDK..."; \
-			$(MAKE) -C ../libc SDK_DIR=$(BOOTSTRAP_SDK) install; \
-		else \
-			echo "[STANDALONE] SDK and peer libc not found. Fetching libc from GitHub..."; \
-			mkdir -p build; \
-			if [ ! -d "build/libc_src" ]; then \
-				git clone https://github.com/boredos/libc.git build/libc_src; \
-			fi; \
-			$(MAKE) -C build/libc_src SDK_DIR=$(BOOTSTRAP_SDK) install; \
-		fi \
-	fi
-endif
 	@if [ ! -f "$(SDK_PATH)/include/novaproto.h" ]; then \
-		if [ ! -d "../nova" ]; then \
-			echo "Nova not found locally. Cloning from GitHub..."; \
-			git clone https://github.com/boredos/nova.git ../nova; \
-		fi; \
-		echo "Exporting Nova SDK components..."; \
-		$(MAKE) -C ../nova BOREDOS_SDK=$(SDK_PATH) export-sdk; \
+		if [ -d "../nova" ]; then \
+			echo "Exporting Nova SDK components..."; \
+			$(MAKE) -C ../nova BOREDOS_SDK=$(SDK_PATH) export-sdk; \
+		fi \
 	fi
 
 # Compile C source files
@@ -73,7 +56,7 @@ obj/%.o: src/%.c | bootstrap-sdk
 
 # Link the userland executable
 $(BINARY): $(OBJECTS)
-	$(LD) $(LDFLAGS) $(SDK_PATH)/lib/crt0.o $(OBJECTS) -lnovaproto -lc -o $@
+	$(LD) $(LDFLAGS) $(SDK_PATH)/lib/crt0.o $(SDK_PATH)/lib/crti.o $(OBJECTS) -lnovaproto -lc $(SDK_PATH)/lib/crtn.o -o $@
 
 install: all
 	mkdir -p $(DESTDIR)/bin
@@ -114,7 +97,7 @@ bup: all
 		@echo 'bin = "/bin"' >> build/package/MANIFEST.toml; \
 		@echo 'assets = "/Library/AppData/org.boredos.doomgeneric"' >> build/package/MANIFEST.toml; \
 	fi
-	mkdir -p build
+	x86_64-elf-strip --strip-unneeded build/package/bin/*.elf 2>/dev/null || true
 	tar -cf build/doomgeneric.tar -C build/package MANIFEST.toml bin assets usr
 	lz4 -f build/doomgeneric.tar build/doomgeneric.bup
 	rm -f build/doomgeneric.tar
