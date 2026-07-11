@@ -1,8 +1,8 @@
 # Copyright (c) 2026 Christiaan (chris@boreddev.nl)
 # BoredOS doomgeneric Makefile
 
-CC = x86_64-elf-gcc
-LD = x86_64-elf-ld
+CC = x86_64-boredos-gcc
+LD = x86_64-boredos-ld
 
 # Smart SDK Resolution Logic
 ifneq ($(BOREDOS_SDK),)
@@ -97,7 +97,7 @@ bup: all
 		@echo 'bin = "/bin"' >> build/package/MANIFEST.toml; \
 		@echo 'assets = "/Library/AppData/org.boredos.doomgeneric"' >> build/package/MANIFEST.toml; \
 	fi
-	x86_64-elf-strip --strip-unneeded build/package/bin/*.elf 2>/dev/null || true
+	x86_64-boredos-strip --strip-unneeded build/package/bin/*.elf 2>/dev/null || true
 	tar -cf build/doomgeneric.tar -C build/package MANIFEST.toml bin assets usr
 	lz4 -f build/doomgeneric.tar build/doomgeneric.bup
 	rm -f build/doomgeneric.tar
