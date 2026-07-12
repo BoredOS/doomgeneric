@@ -2,34 +2,18 @@
 # BoredOS doomgeneric Makefile
 
 CC = x86_64-boredos-gcc
-LD = x86_64-boredos-ld
 
-# Smart SDK Resolution Logic
-ifneq ($(BOREDOS_SDK),)
-  ifeq ($(wildcard $(BOREDOS_SDK)/lib/libc.a),)
-    BOOTSTRAP_SDK = $(BOREDOS_SDK)
-    SDK_PATH      = $(BOREDOS_SDK)
-  else
-    SDK_PATH      = $(BOREDOS_SDK)
-  endif
-endif
-
-# If SDK is still unresolved, fall back to a local standalone build folder
-ifeq ($(SDK_PATH),)
-  SDK_PATH = $(abspath build/sdk)
-  ifeq ($(wildcard $(SDK_PATH)/lib/libc.a),)
-    BOOTSTRAP_SDK = $(SDK_PATH)
-  endif
-endif
+BOREDOS_SDK ?= $(abspath ../../build/sdk)
+SDK_PATH = $(BOREDOS_SDK)
 
 DESTDIR ?= $(abspath build/dist)
 
 CFLAGS  = -Wall -Wextra -std=gnu11 -ffreestanding -O2 -fno-stack-protector \
           -fno-stack-check -fno-lto -fno-pie -m64 -march=x86-64 -mno-red-zone \
-          -isystem $(SDK_PATH)/include -Isrc -DNORMALUNIX -D_DEFAULT_SOURCE
+          -I$(SDK_PATH)/include -Isrc -DNORMALUNIX -D_DEFAULT_SOURCE
 
-LDFLAGS = -m elf_x86_64 -nostdlib -static -no-pie -Ttext=0x40000000 \
-          --no-dynamic-linker -z text -z max-page-size=0x1000 -e _start \
+LDFLAGS = -static -no-pie -Wl,-Ttext=0x40000000 \
+          -Wl,--no-dynamic-linker -Wl,-z,text -Wl,-z,max-page-size=0x1000 \
           -L$(SDK_PATH)/lib
 
 # Core Doom source files + Platform port file
@@ -56,7 +40,7 @@ obj/%.o: src/%.c | bootstrap-sdk
 
 # Link the userland executable
 $(BINARY): $(OBJECTS)
-	$(LD) $(LDFLAGS) $(SDK_PATH)/lib/crt0.o $(SDK_PATH)/lib/crti.o $(OBJECTS) -lnovaproto -lc $(SDK_PATH)/lib/crtn.o -o $@
+	$(CC) $(OBJECTS) -lnovaproto $(LDFLAGS) -o $@
 
 install: all
 	mkdir -p $(DESTDIR)/bin
