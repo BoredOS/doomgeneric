@@ -43,8 +43,8 @@ enum {
 #include "doomkeys.h"
 #include "doomgeneric.h"
 
-#define WINDOW_WIDTH  640
-#define WINDOW_HEIGHT 400
+#define WINDOW_WIDTH  1280
+#define WINDOW_HEIGHT 800
 #define NORMAL_LAYER  2
 
 #define KEYQUEUE_SIZE 32
@@ -169,7 +169,7 @@ void DG_SleepMs(uint32_t ms) {
     if (ms < 10) {
         sched_yield();
     } else {
-        sleep(ms);
+        usleep(ms * 1000);
     }
 }
 uint32_t DG_GetTicksMs() {
@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
             
             uint32_t remain = 28 - (now - last_tick);
             if (remain >= 10) {
-                sleep(remain);
+                usleep(remain * 1000);
             } else {
                 sched_yield();
             }
