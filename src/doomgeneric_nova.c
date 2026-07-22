@@ -42,6 +42,7 @@ enum {
 
 #include "doomkeys.h"
 #include "doomgeneric.h"
+#include "font8x8.h"
 
 #define WINDOW_WIDTH  1280
 #define WINDOW_HEIGHT 800
@@ -155,9 +156,89 @@ void DG_Init() {
     }
     nova_set_title(nova_fd, surface_id, "DOOMgeneric");
 }
+static void draw_rect(uint32_t *pixels, int x, int y, int w, int h, uint32_t color) {
+    for (int py = y; py < y + h; py++) {
+        if (py < 0 || py >= WINDOW_HEIGHT) continue;
+        for (int px = x; px < x + w; px++) {
+            if (px < 0 || px >= WINDOW_WIDTH) continue;
+            pixels[py * WINDOW_WIDTH + px] = color;
+        }
+    }
+}
+
+static void draw_char(uint32_t *pixels, int x, int y, char c, uint32_t color, int scale) {
+    unsigned char uc = (unsigned char)c;
+    if (uc > 127) return;
+    const uint8_t *glyph = font8x8_basic[uc];
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+            if ((glyph[row] >> (7 - col)) & 1) {
+                for (int sy = 0; sy < scale; sy++) {
+                    for (int sx = 0; sx < scale; sx++) {
+                        int px = x + col * scale + sx;
+                        int py = y + row * scale + sy;
+                        if (px >= 0 && px < WINDOW_WIDTH && py >= 0 && py < WINDOW_HEIGHT) {
+                            pixels[py * WINDOW_WIDTH + px] = color;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+static void draw_string(uint32_t *pixels, int x, int y, const char *s, uint32_t color, int scale) {
+    if (!s) return;
+    int cur_x = x;
+    while (*s) {
+        char c = *s++;
+        if (c == ' ') {
+            cur_x += 8 * scale;
+            continue;
+        }
+        draw_char(pixels, cur_x, y, c, color, scale);
+        cur_x += 8 * scale;
+    }
+}
+
 void DG_DrawFrame() {
     if (!shm_pixels || !DG_ScreenBuffer) return;
+
+    static uint32_t frame_count = 0;
+    static uint32_t last_fps_time = 0;
+    static uint32_t current_fps = 0;
+
+    uint32_t now = DG_GetTicksMs();
+    frame_count++;
+    if (last_fps_time == 0) {
+        last_fps_time = now;
+    }
+    if (now - last_fps_time >= 1000) {
+        current_fps = (frame_count * 1000) / (now - last_fps_time);
+        frame_count = 0;
+        last_fps_time = now;
+    }
+
+    char fps_str[32];
+    snprintf(fps_str, sizeof(fps_str), "FPS: %u", current_fps);
+
+    int scale = 2;
+    int char_w = 8 * scale;
+    int char_h = 8 * scale;
+    int text_len = strlen(fps_str);
+
+    int padding = 6;
+    int x_pos = 10;
+    int y_pos = 10;
+
+    int box_w = text_len * char_w + padding * 2;
+    int box_h = char_h + padding * 2;
+
+    draw_rect((uint32_t *)DG_ScreenBuffer, x_pos - padding, y_pos - padding, box_w, box_h, 0xFF000000);
+    draw_string((uint32_t *)DG_ScreenBuffer, x_pos, y_pos, fps_str, 0xFF00FF00, scale);
+
     memcpy(shm_pixels, DG_ScreenBuffer, WINDOW_WIDTH * WINDOW_HEIGHT * 4);
+
     NovaRect damage = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
     nova_damage_surface(nova_fd, surface_id, 1, &damage);
     poll_nova_events();
@@ -173,7 +254,7 @@ void DG_SleepMs(uint32_t ms) {
     }
 }
 uint32_t DG_GetTicksMs() {
-    return (uint32_t)get_ticks() * 50 / 3;
+    return (uint32_t)get_ticks();
 }
 int DG_GetKey(int* pressed, unsigned char* doomKey) {
     if (s_KeyQueueReadIndex == s_KeyQueueWriteIndex) {
@@ -196,6 +277,14 @@ void DG_SetWindowTitle(const char *title) {
     }
 }
 int main(int argc, char **argv) {
+    int uncapped = 1;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-capped") == 0) {
+            uncapped = 0;
+            break;
+        }
+    }
+
     doomgeneric_Create(argc, argv);
 
     uint32_t last_tick = DG_GetTicksMs();
@@ -203,19 +292,23 @@ int main(int argc, char **argv) {
     while (1) {
         doomgeneric_Tick();
         
-        while (1) {
-            uint32_t now = DG_GetTicksMs();
-            if ((now - last_tick) >= 28) {
-                last_tick = now;
-                break;
+        if (!uncapped) {
+            while (1) {
+                uint32_t now = DG_GetTicksMs();
+                if ((now - last_tick) >= 28) {
+                    last_tick = now;
+                    break;
+                }
+                
+                uint32_t remain = 28 - (now - last_tick);
+                if (remain >= 10) {
+                    usleep(remain * 1000);
+                } else {
+                    sched_yield();
+                }
             }
-            
-            uint32_t remain = 28 - (now - last_tick);
-            if (remain >= 10) {
-                usleep(remain * 1000);
-            } else {
-                sched_yield();
-            }
+        } else {
+            usleep(1000);
         }
     }
 
